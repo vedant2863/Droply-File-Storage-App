@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: droply-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: droply
+    ports:
+      - "5433:5432"
+    volumes:
+      - droply_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d droply"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  droply_pgdata:
+    name: droply_pgdata
