@@ -5,11 +5,9 @@ import { ArrowRight, Sparkles } from "lucide-react";
 export function CtaSection() {
   return (
     <section className="py-20 lg:py-28 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/10 via-indigo-600/5 to-transparent pointer-events-none" />
       <div className="absolute inset-0 bg-linear-to-tr from-blue-600/10 via-indigo-600/5 to-transparent pointer-events-none" />
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="p-10 sm:p-16 rounded-3xl bg-gradient-to-b from-blue-600 to-indigo-700 text-white text-center space-y-8 shadow-2xl shadow-blue-500/20">
         <div className="p-10 sm:p-16 rounded-3xl bg-linear-to-b from-blue-600 to-indigo-700 text-white text-center space-y-8 shadow-2xl shadow-blue-500/20">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/20 text-white text-xs font-semibold backdrop-blur-md">
             <Sparkles className="w-3.5 h-3.5" />
