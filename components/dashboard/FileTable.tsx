@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { FileRecord } from "@/lib/db/schema";
 import { FileIcon } from "@/components/ui/FileIcon";
 import { Star, Trash2, RotateCcw, Download, Eye } from "lucide-react";
 import { formatFileSize, formatRelativeTime } from "@/lib/utils";

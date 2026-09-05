@@ -3,12 +3,7 @@
  */
 
 import React from "react";
-import type {
-  FileRecord,
-  ActiveTab,
-  BreadcrumbItem,
-  FileCategory,
-} from "./file";
+import type { FileRecord, ActiveTab, BreadcrumbItem } from "./file";
 
 export type ToastType = "success" | "error" | "info" | "warning";
 

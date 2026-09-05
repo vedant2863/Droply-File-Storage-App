@@ -10,7 +10,6 @@ import {
   formatRelativeTime,
   getFileCategory,
 } from "@/lib/utils";
-import { FileRecord } from "@/lib/db/schema";
 
 import type { FilePreviewModalProps } from "@/types";
 
