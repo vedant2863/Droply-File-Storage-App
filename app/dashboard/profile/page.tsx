@@ -64,7 +64,7 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* User Identity Card */}
             <div className="md:col-span-1 p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col items-center text-center space-y-4">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <div className="w-24 h-24 rounded-3xl bg-linear-to-tr from-blue-600 to-indigo-500 text-white font-extrabold text-2xl flex items-center justify-center shadow-lg shadow-blue-500/20">
                 {getInitials(user?.name)}
               </div>
 
@@ -121,7 +121,7 @@ export default function ProfilePage() {
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
                   <div
-                    className="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full transition-all duration-500"
+                    className="bg-linear-to-r from-blue-600 to-indigo-500 h-full rounded-full transition-all duration-500"
                     style={{ width: `${Math.max(2, storagePercentage)}%` }}
                   />
                 </div>

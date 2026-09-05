@@ -102,7 +102,7 @@ export function VaultPreview() {
   const currentFiles = mockFilesByFolder[selectedFolder] || [];
 
   return (
-    <div className="relative max-w-5xl mx-auto rounded-3xl p-2 bg-gradient-to-b from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-300/80 dark:border-slate-700/80 shadow-2xl shadow-blue-900/10 dark:shadow-blue-950/40">
+    <div className="relative max-w-5xl mx-auto rounded-3xl p-2 bg-linear-to-b from-slate-200 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-300/80 dark:border-slate-700/80 shadow-2xl shadow-blue-900/10 dark:shadow-blue-950/40">
       <div className="rounded-2xl bg-white dark:bg-[#0b111e] overflow-hidden border border-slate-200/90 dark:border-slate-800">
         {/* Simulated Window Title Bar */}
         <div className="px-4 py-3 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
@@ -177,7 +177,7 @@ export function VaultPreview() {
                 </span>
               </div>
               <div className="w-full h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 w-[28%] rounded-full" />
+                <div className="h-full bg-linear-to-r from-blue-500 to-indigo-500 w-[28%] rounded-full" />
               </div>
               <div className="text-[10px] text-slate-400 flex items-center gap-1">
                 <Zap className="w-3 h-3 text-amber-500" />
