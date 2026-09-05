@@ -8,6 +8,12 @@ import { eq } from "drizzle-orm";
 
 async function seed() {
   console.log("🌱 Seeding database...");
+export interface SeedOptions {
+  force?: boolean;
+  name?: string;
+  email?: string;
+  password?: string;
+}
 
   try {
     const demoEmail = "demo@droply.com";
@@ -16,8 +22,13 @@ async function seed() {
       .from(users)
       .where(eq(users.email, demoEmail))
       .limit(1);
+export async function seedDatabase(options: SeedOptions = {}) {
+  const targetEmail = (options.email || "demo@droply.com").toLowerCase().trim();
+  const targetName = options.name || "Demo User";
+  const targetPassword = options.password || "password123";
 
     let userId: string;
+  console.log(`🌱 Seeding database for user: ${targetEmail}...`);
 
     if (existingUser.length > 0) {
       console.log("ℹ️ Demo user already exists:", existingUser[0].id);
@@ -29,11 +40,46 @@ async function seed() {
         .values({
           name: "Demo User",
           email: demoEmail,
+  const existingUsers = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, targetEmail))
+    .limit(1);
+
+  let userId: string;
+  let isNewUser = false;
+
+  const hashedPassword = await bcrypt.hash(targetPassword, 10);
+
+  if (existingUsers.length > 0) {
+    userId = existingUsers[0].id;
+    if (options.force) {
+      await db
+        .update(users)
+        .set({
+          name: targetName,
           password: hashedPassword,
           avatarUrl:
             "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+          updatedAt: new Date(),
         })
         .returning();
+        .where(eq(users.id, userId));
+      console.log(`ℹ️ Existing user ${targetEmail} updated.`);
+    } else {
+      console.log(`ℹ️ User ${targetEmail} already exists: ${userId}`);
+    }
+  } else {
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        name: targetName,
+        email: targetEmail,
+        password: hashedPassword,
+        avatarUrl:
+          "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      })
+      .returning();
 
       userId = newUser.id;
       console.log(
@@ -41,6 +87,10 @@ async function seed() {
         demoEmail,
         "(Password: password123)",
       );
+    userId = newUser.id;
+    isNewUser = true;
+    console.log(`✅ Created user: ${targetEmail}`);
+  }
 
       // Create sample folders
       const [docsFolder] = await db
@@ -54,6 +104,12 @@ async function seed() {
           isFolder: true,
         })
         .returning();
+  // Check if sample folders exist for this user
+  const existingFolders = await db
+    .select()
+    .from(files)
+    .where(eq(files.userId, userId))
+    .limit(1);
 
       await db.insert(files).values({
         name: "Images",
@@ -64,15 +120,25 @@ async function seed() {
         isFolder: true,
         isStarred: true,
       });
+  let createdFolders = false;
 
       await db.insert(files).values({
         name: "Projects",
         path: "/Projects",
+  if (existingFolders.length === 0) {
+    // Create sample folders
+    const [docsFolder] = await db
+      .insert(files)
+      .values({
+        name: "Documents",
+        path: "/Documents",
         size: 0,
         type: "folder",
         userId,
         isFolder: true,
       });
+      })
+      .returning();
 
       // Create a subfolder inside Documents
       await db.insert(files).values({
@@ -84,18 +150,82 @@ async function seed() {
         parentId: docsFolder.id,
         isFolder: true,
       });
+    await db.insert(files).values({
+      name: "Images",
+      path: "/Images",
+      size: 0,
+      type: "folder",
+      userId,
+      isFolder: true,
+      isStarred: true,
+    });
 
       console.log(
         "✅ Created sample folder tree (Documents, Documents/Invoices, Images, Projects)",
       );
     }
+    await db.insert(files).values({
+      name: "Projects",
+      path: "/Projects",
+      size: 0,
+      type: "folder",
+      userId,
+      isFolder: true,
+    });
 
     console.log("🎉 Seeding completed successfully!");
     process.exit(0);
   } catch (error) {
     console.error("❌ Seeding failed:", error);
     process.exit(1);
+    // Create a subfolder inside Documents
+    await db.insert(files).values({
+      name: "Invoices",
+      path: "/Documents/Invoices",
+      size: 0,
+      type: "folder",
+      userId,
+      parentId: docsFolder.id,
+      isFolder: true,
+    });
+
+    createdFolders = true;
+    console.log("✅ Created sample folder tree (Documents, Invoices, Images, Projects)");
   }
+
+  return {
+    success: true,
+    message: isNewUser
+      ? `User ${targetEmail} and initial folder hierarchy created successfully.`
+      : options.force
+        ? `User ${targetEmail} credentials reset and folders verified.`
+        : `User ${targetEmail} already exists. Ready to log in.`,
+    user: {
+      id: userId,
+      name: targetName,
+      email: targetEmail,
+    },
+    credentials: {
+      email: targetEmail,
+      password: targetPassword,
+    },
+    seeded: isNewUser || createdFolders,
+  };
 }
 
 seed();
+// Auto-run if executed directly via CLI
+if (
+  process.argv[1] &&
+  process.argv[1].replace(/\\/g, "/").endsWith("lib/db/seed.ts")
+) {
+  seedDatabase()
+    .then((result) => {
+      console.log("🎉 Seeding completed successfully!", result.message);
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("❌ Seeding failed:", error);
+      process.exit(1);
+    });
+}
