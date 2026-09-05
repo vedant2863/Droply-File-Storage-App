@@ -66,6 +66,16 @@ export interface FileIconProps {
 export interface FolderNavigationProps {
   breadcrumbs: BreadcrumbItem[];
   onNavigate: (folderId: string | null) => void;
+  onMoveItems?: (
+    itemIds: string[],
+    targetFolderId: string | null,
+    targetFolderName: string,
+  ) => Promise<void> | void;
+  onDropFilesOnBreadcrumb?: (
+    files: File[],
+    targetFolderId: string | null,
+    targetFolderName: string,
+  ) => void;
 }
 
 export interface FileTabsProps {
@@ -98,6 +108,16 @@ export interface FileTableProps {
   onToggleTrash: (fileId: string) => void;
   onPermanentDelete: (file: FileRecord) => void;
   activeTab: ActiveTab;
+  onMoveItems?: (
+    itemIds: string[],
+    targetFolderId: string,
+    targetFolderName: string,
+  ) => Promise<void> | void;
+  onDropFilesOnFolder?: (
+    files: File[],
+    targetFolderId: string,
+    targetFolderName: string,
+  ) => void;
 }
 
 export interface FilePreviewModalProps {
@@ -111,6 +131,8 @@ export interface FileUploadModalProps {
   onClose: () => void;
   parentId: string | null;
   onUploadSuccess: () => void;
+  initialFiles?: File[];
+  targetFolderName?: string;
 }
 
 export interface CreateFolderModalProps {

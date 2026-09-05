@@ -41,6 +41,11 @@ export default function DashboardPage() {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileRecord | null>(null);
   const [isDownloadingZip, setIsDownloadingZip] = useState(false);
+  const [uploadTarget, setUploadTarget] = useState<{
+    parentId: string | null;
+    folderName?: string;
+    files?: File[];
+  }>({ parentId: null });
 
   // Confirmation Modal state
   const [confirmModal, setConfirmModal] = useState<{
@@ -376,6 +381,53 @@ export default function DashboardPage() {
     }
   };
 
+  // Drag & Drop: Move items into a target folder
+  const handleMoveItems = async (
+    fileIds: string[],
+    targetFolderId: string | null,
+    targetFolderName: string,
+  ) => {
+    try {
+      const res = await authFetch("/api/files/move", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileIds,
+          targetParentId: targetFolderId,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        addToast(
+          `Moved ${fileIds.length} item(s) to "${targetFolderName}"`,
+          "success",
+        );
+        fetchFiles();
+        setSelectedIds([]);
+      } else {
+        addToast(data.error || "Failed to move item(s)", "error");
+      }
+    } catch (err) {
+      console.error("Move error:", err);
+      addToast("Failed to move item(s)", "error");
+    }
+  };
+
+  // Drag & Drop: Drop OS files on a folder to upload into that folder
+  const handleDropFilesOnFolder = (
+    droppedFiles: File[],
+    targetFolderId: string | null,
+    targetFolderName: string,
+  ) => {
+    setUploadTarget({
+      parentId: targetFolderId,
+      folderName: targetFolderName,
+      files: droppedFiles,
+    });
+    setIsUploadOpen(true);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-[#090d16]">
       <Navbar searchQuery={searchQuery} onSearchChange={setSearchQuery} />
@@ -433,6 +485,8 @@ export default function DashboardPage() {
           <FolderNavigation
             breadcrumbs={breadcrumbs}
             onNavigate={handleNavigate}
+            onMoveItems={handleMoveItems}
+            onDropFilesOnBreadcrumb={handleDropFilesOnFolder}
           />
         )}
 
@@ -458,7 +512,10 @@ export default function DashboardPage() {
           <EmptyState
             tab={activeTab}
             isSearch={Boolean(searchQuery.trim())}
-            onUploadClick={() => setIsUploadOpen(true)}
+            onUploadClick={() => {
+              setUploadTarget({ parentId: currentParentId });
+              setIsUploadOpen(true);
+            }}
             onCreateFolderClick={() => setIsCreateFolderOpen(true)}
           />
         ) : (
@@ -473,6 +530,8 @@ export default function DashboardPage() {
             onToggleTrash={handleToggleTrash}
             onPermanentDelete={handlePermanentDelete}
             activeTab={activeTab}
+            onMoveItems={handleMoveItems}
+            onDropFilesOnFolder={handleDropFilesOnFolder}
           />
         )}
       </main>
@@ -480,11 +539,17 @@ export default function DashboardPage() {
       {/* Modals */}
       <FileUploadModal
         isOpen={isUploadOpen}
-        onClose={() => setIsUploadOpen(false)}
-        parentId={currentParentId}
+        onClose={() => {
+          setIsUploadOpen(false);
+          setUploadTarget({ parentId: currentParentId });
+        }}
+        parentId={uploadTarget.parentId ?? currentParentId}
+        initialFiles={uploadTarget.files}
+        targetFolderName={uploadTarget.folderName}
         onUploadSuccess={() => {
           fetchFiles();
           setIsUploadOpen(false);
+          setUploadTarget({ parentId: currentParentId });
         }}
       />
 

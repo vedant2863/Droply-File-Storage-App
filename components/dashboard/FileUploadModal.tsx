@@ -22,12 +22,25 @@ export function FileUploadModal({
   onClose,
   parentId,
   onUploadSuccess,
+  initialFiles,
+  targetFolderName,
 }: FileUploadModalProps) {
   const [tasks, setTasks] = useState<UploadTask[]>([]);
   const [isUploadingAll, setIsUploadingAll] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { addToast } = useToast();
+
+  React.useEffect(() => {
+    if (initialFiles && initialFiles.length > 0 && isOpen) {
+      const newTasks: UploadTask[] = initialFiles.map((file) => ({
+        file,
+        status: "pending",
+        progress: 0,
+      }));
+      setTasks(newTasks);
+    }
+  }, [initialFiles, isOpen]);
 
   const handleFilesAdded = (fileList: FileList | null) => {
     if (!fileList || fileList.length === 0) return;
@@ -160,8 +173,12 @@ export function FileUploadModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Upload Files"
-      description="Upload files directly to Droply cloud storage via ImageKit CDN."
+      title={targetFolderName ? `Upload to ${targetFolderName}` : "Upload Files"}
+      description={
+        targetFolderName
+          ? `Upload files directly into "${targetFolderName}".`
+          : "Upload files directly to Droply cloud storage via ImageKit CDN."
+      }
       maxWidth="lg"
       showCloseButton={!isUploadingAll}
     >

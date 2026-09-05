@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 import bcrypt from "bcryptjs";
+import { sql } from "drizzle-orm";
 import { db } from "./index";
 import { users, files } from "./schema";
 import { eq } from "drizzle-orm";
@@ -13,7 +14,61 @@ export interface SeedOptions {
   password?: string;
 }
 
+export async function ensureTablesExist() {
+  console.log("🛠️ Ensuring PostgreSQL tables exist...");
+
+  // 1. Users table
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "users" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      "name" text NOT NULL,
+      "email" text NOT NULL UNIQUE,
+      "password" text NOT NULL,
+      "avatar_url" text,
+      "created_at" timestamp DEFAULT now() NOT NULL,
+      "updated_at" timestamp DEFAULT now() NOT NULL
+    )
+  `);
+
+  // 2. Refresh tokens table
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "refresh_tokens" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE cascade,
+      "token" text NOT NULL UNIQUE,
+      "expires_at" timestamp NOT NULL,
+      "created_at" timestamp DEFAULT now() NOT NULL
+    )
+  `);
+
+  // 3. Files & folders table
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS "files" (
+      "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+      "name" text NOT NULL,
+      "path" text NOT NULL,
+      "size" integer DEFAULT 0 NOT NULL,
+      "type" text NOT NULL,
+      "file_url" text,
+      "thumbnail_url" text,
+      "imagekit_file_id" text,
+      "user_id" uuid NOT NULL REFERENCES "users"("id") ON DELETE cascade,
+      "parent_id" uuid,
+      "is_folder" boolean DEFAULT false NOT NULL,
+      "is_starred" boolean DEFAULT false NOT NULL,
+      "is_trash" boolean DEFAULT false NOT NULL,
+      "created_at" timestamp DEFAULT now() NOT NULL,
+      "updated_at" timestamp DEFAULT now() NOT NULL
+    )
+  `);
+
+  console.log("✅ Tables verified / created.");
+}
+
 export async function seedDatabase(options: SeedOptions = {}) {
+  // Always ensure tables exist first before querying
+  await ensureTablesExist();
+
   const targetEmail = (options.email || "demo@droply.com").toLowerCase().trim();
   const targetName = options.name || "Demo User";
   const targetPassword = options.password || "password123";
@@ -117,6 +172,9 @@ export async function seedDatabase(options: SeedOptions = {}) {
     });
 
     createdFolders = true;
+    console.log(
+      "✅ Created sample folder tree (Documents, Invoices, Images, Projects)",
+    );
     console.log(
       "✅ Created sample folder tree (Documents, Invoices, Images, Projects)",
     );

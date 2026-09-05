@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FileIcon } from "@/components/ui/FileIcon";
-import { Star, Trash2, RotateCcw, Download, Eye } from "lucide-react";
+import { Star, Trash2, RotateCcw, Download, Eye, CornerDownRight } from "lucide-react";
 import { formatFileSize, formatRelativeTime } from "@/lib/utils";
 
 import type { FileTableProps } from "@/types";
@@ -20,8 +20,90 @@ export function FileTable({
   onToggleTrash,
   onPermanentDelete,
   activeTab,
+  onMoveItems,
+  onDropFilesOnFolder,
 }: FileTableProps) {
+  const [draggedItemIds, setDraggedItemIds] = useState<string[]>([]);
+  const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
+
   const isAllSelected = items.length > 0 && selectedIds.length === items.length;
+
+  const handleDragStart = (e: React.DragEvent, itemId: string) => {
+    if (activeTab === "trash") return;
+
+    // If the dragged item is part of the current selection, move all selected items.
+    // Otherwise, move just this item.
+    const targetIds = selectedIds.includes(itemId) ? selectedIds : [itemId];
+    setDraggedItemIds(targetIds);
+
+    e.dataTransfer.setData(
+      "application/json",
+      JSON.stringify({ type: "droply-item", ids: targetIds }),
+    );
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIds([]);
+    setHoveredFolderId(null);
+  };
+
+  const handleFolderDragOver = (e: React.DragEvent, folderId: string) => {
+    // Cannot drop into one of the items currently being dragged
+    if (draggedItemIds.includes(folderId)) return;
+
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (hoveredFolderId !== folderId) {
+      setHoveredFolderId(folderId);
+    }
+  };
+
+  const handleFolderDragLeave = (e: React.DragEvent, folderId: string) => {
+    if (hoveredFolderId === folderId) {
+      setHoveredFolderId(null);
+    }
+  };
+
+  const handleFolderDrop = (
+    e: React.DragEvent,
+    folderId: string,
+    folderName: string,
+  ) => {
+    e.preventDefault();
+    setHoveredFolderId(null);
+
+    // 1. Check if files were dropped from the operating system (desktop / file explorer)
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      onDropFilesOnFolder?.(
+        Array.from(e.dataTransfer.files),
+        folderId,
+        folderName,
+      );
+      return;
+    }
+
+    // 2. Check if internal Droply items were dragged
+    try {
+      const dataStr = e.dataTransfer.getData("application/json");
+      if (dataStr) {
+        const parsed = JSON.parse(dataStr);
+        if (
+          parsed.type === "droply-item" &&
+          Array.isArray(parsed.ids) &&
+          parsed.ids.length > 0
+        ) {
+          // Filter out the destination folder itself
+          const validIds = parsed.ids.filter((id: string) => id !== folderId);
+          if (validIds.length > 0) {
+            onMoveItems?.(validIds, folderId, folderName);
+          }
+        }
+      }
+    } catch {
+      // ignore parsing errors
+    }
+  };
 
   return (
     <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
@@ -46,14 +128,38 @@ export function FileTable({
         <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
           {items.map((item) => {
             const isSelected = selectedIds.includes(item.id);
+            const isBeingDragged = draggedItemIds.includes(item.id);
+            const isDropTarget = hoveredFolderId === item.id;
 
             return (
               <tr
                 key={item.id}
-                className={`group transition-colors duration-150 ${
-                  isSelected
-                    ? "bg-blue-50/70 dark:bg-blue-950/40"
-                    : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                draggable={activeTab !== "trash"}
+                onDragStart={(e) => handleDragStart(e, item.id)}
+                onDragEnd={handleDragEnd}
+                onDragOver={
+                  item.isFolder
+                    ? (e) => handleFolderDragOver(e, item.id)
+                    : undefined
+                }
+                onDragLeave={
+                  item.isFolder
+                    ? (e) => handleFolderDragLeave(e, item.id)
+                    : undefined
+                }
+                onDrop={
+                  item.isFolder
+                    ? (e) => handleFolderDrop(e, item.id, item.name)
+                    : undefined
+                }
+                className={`group transition-all duration-150 ${
+                  isBeingDragged
+                    ? "opacity-40 bg-slate-100 dark:bg-slate-800 border-dashed border-2 border-blue-400"
+                    : isDropTarget
+                      ? "bg-blue-100/90 dark:bg-blue-950/70 ring-2 ring-blue-500 ring-inset shadow-md"
+                      : isSelected
+                        ? "bg-blue-50/70 dark:bg-blue-950/40"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800/50"
                 }`}
               >
                 {/* Select Checkbox */}
@@ -79,18 +185,32 @@ export function FileTable({
                     }}
                     className="flex items-center gap-3 cursor-pointer group-hover:text-blue-600 dark:group-hover:text-blue-400"
                   >
-                    <FileIcon
-                      type={item.type}
-                      isFolder={item.isFolder}
-                      size="md"
-                    />
+                    <div
+                      className={`transition-transform duration-150 ${
+                        isDropTarget ? "scale-125" : ""
+                      }`}
+                    >
+                      <FileIcon
+                        type={item.type}
+                        isFolder={item.isFolder}
+                        size="md"
+                      />
+                    </div>
                     <div className="truncate max-w-[200px] sm:max-w-xs md:max-w-md">
-                      <p className="font-medium text-slate-900 dark:text-slate-100 truncate">
-                        {item.name}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-slate-900 dark:text-slate-100 truncate">
+                          {item.name}
+                        </p>
+                        {isDropTarget && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-bold animate-pulse shrink-0">
+                            <CornerDownRight className="w-3 h-3" />
+                            Drop inside
+                          </span>
+                        )}
+                      </div>
                       {item.isFolder ? (
                         <span className="text-[11px] text-slate-400">
-                          Folder
+                          Folder {activeTab !== "trash" && "• Drag files here"}
                         </span>
                       ) : (
                         <span className="text-[11px] text-slate-400 sm:hidden">

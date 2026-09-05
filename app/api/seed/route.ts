@@ -19,14 +19,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error("GET /api/seed error:", error);
+    const causeMessage = (error as { cause?: { message?: string } })?.cause
+      ?.message;
     const errorMessage =
       error instanceof Error ? error.message : "Internal server error";
+    const details = causeMessage
+      ? `${errorMessage} (${causeMessage})`
+      : errorMessage;
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to seed database",
-        details: errorMessage,
+        details,
       },
       { status: 500 },
     );
@@ -60,14 +65,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error("POST /api/seed error:", error);
+    const causeMessage = (error as { cause?: { message?: string } })?.cause
+      ?.message;
     const errorMessage =
       error instanceof Error ? error.message : "Internal server error";
+    const details = causeMessage
+      ? `${errorMessage} (${causeMessage})`
+      : errorMessage;
 
     return NextResponse.json(
       {
         success: false,
         error: "Failed to seed database",
-        details: errorMessage,
+        details,
       },
       { status: 500 },
     );
