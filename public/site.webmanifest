@@ -1,0 +1,17 @@
+{
+  "name": "Droply - Cloud File Storage Platform",
+  "short_name": "Droply",
+  "description": "Secure, fast, and modern cloud file storage with nested folders, instant preview, and batch ZIP downloads.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#090d16",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}

@@ -55,30 +55,24 @@ async function seed() {
         })
         .returning();
 
-      const [imagesFolder] = await db
-        .insert(files)
-        .values({
-          name: "Images",
-          path: "/Images",
-          size: 0,
-          type: "folder",
-          userId,
-          isFolder: true,
-          isStarred: true,
-        })
-        .returning();
+      await db.insert(files).values({
+        name: "Images",
+        path: "/Images",
+        size: 0,
+        type: "folder",
+        userId,
+        isFolder: true,
+        isStarred: true,
+      });
 
-      const [projectsFolder] = await db
-        .insert(files)
-        .values({
-          name: "Projects",
-          path: "/Projects",
-          size: 0,
-          type: "folder",
-          userId,
-          isFolder: true,
-        })
-        .returning();
+      await db.insert(files).values({
+        name: "Projects",
+        path: "/Projects",
+        size: 0,
+        type: "folder",
+        userId,
+        isFolder: true,
+      });
 
       // Create a subfolder inside Documents
       await db.insert(files).values({

@@ -13,20 +13,8 @@ import {
 import { formatFileSize } from "@/lib/utils";
 import { useToast } from "@/context/ToastContext";
 
-interface FileUploadModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  parentId: string | null;
-  onUploadSuccess: () => void;
-}
 import type { FileUploadModalProps, UploadTask } from "@/types";
 
-interface UploadTask {
-  file: File;
-  status: "pending" | "uploading" | "success" | "error";
-  progress: number;
-  errorMessage?: string;
-}
 export type { FileUploadModalProps, UploadTask };
 
 export function FileUploadModal({

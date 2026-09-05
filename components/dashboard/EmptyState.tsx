@@ -4,12 +4,6 @@ import React from "react";
 import { FolderOpen, Star, Trash2, Search, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
-interface EmptyStateProps {
-  tab: "all" | "starred" | "trash";
-  isSearch?: boolean;
-  onUploadClick?: () => void;
-  onCreateFolderClick?: () => void;
-}
 import type { EmptyStateProps } from "@/types";
 
 export type { EmptyStateProps };

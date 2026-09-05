@@ -4,7 +4,7 @@ import React from "react";
 import { Navbar } from "@/components/layout/Navbar";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/Button";
-import { formatFileSize, formatRelativeTime } from "@/lib/utils";
+import { formatFileSize } from "@/lib/utils";
 import {
   User as UserIcon,
   Mail,

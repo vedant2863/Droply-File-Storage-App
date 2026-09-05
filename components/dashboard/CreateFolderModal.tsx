@@ -7,12 +7,6 @@ import { Button } from "@/components/ui/Button";
 import { FolderPlus } from "lucide-react";
 import { useToast } from "@/context/ToastContext";
 
-interface CreateFolderModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  parentId: string | null;
-  onFolderCreated: () => void;
-}
 import type { CreateFolderModalProps } from "@/types";
 
 export type { CreateFolderModalProps };
